@@ -55,29 +55,19 @@
             transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
         }
 
-        .wheel-item {
+        .wheel-text {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            left: 0;
-            top: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-size: 14px;
             font-weight: bold;
             color: white;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
             text-align: center;
-            pointer-events: none;
-        }
-
-        .wheel-item span {
-            display: block;
-            max-width: 80px;
-            line-height: 1.3;
             white-space: nowrap;
-            margin-top: -110px;
+            transform-origin: center center;
+            pointer-events: none;
+            padding: 4px 8px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 12px;
         }
 
         .pointer {
@@ -597,29 +587,37 @@
             
             wheel.appendChild(svg);
             
-            // 添加文字标签
+            // 添加文字标签 - 使用SVG文字确保正确旋转
             foods.forEach((food, index) => {
-                const item = document.createElement('div');
-                item.className = 'wheel-item';
+                const midAngle = index * angle + angle / 2;
+                const textRadius = radius * 0.6;
                 
-                // 计算文字位置（扇形中间）
-                const midAngle = index * angle + angle / 2 - 90;
-                const textRadius = radius * 0.65;
+                // 计算文字位置（从圆心向外）
+                const textAngle = (midAngle - 90) * Math.PI / 180;
+                const x = 175 + textRadius * Math.cos(textAngle);
+                const y = 175 + textRadius * Math.sin(textAngle);
                 
-                item.style.left = '0';
-                item.style.top = '0';
-                item.style.width = '100%';
-                item.style.height = '100%';
-                item.style.transform = `rotate(${index * angle + angle / 2}deg)`;
-                item.style.background = 'transparent';
-                item.style.clipPath = 'none';
+                // 创建SVG文字元素
+                const text = document.createElementNS(svgNS, "text");
+                text.setAttribute("x", x);
+                text.setAttribute("y", y);
+                text.setAttribute("text-anchor", "middle");
+                text.setAttribute("dominant-baseline", "middle");
+                text.setAttribute("fill", "white");
+                text.setAttribute("font-size", "14");
+                text.setAttribute("font-weight", "bold");
+                text.setAttribute("style", "text-shadow: 1px 1px 3px rgba(0,0,0,0.8);");
                 
-                const span = document.createElement('span');
-                span.textContent = `${food.emoji} ${food.name}`;
-                span.style.transform = `translateY(-${textRadius}px)`;
+                // 旋转文字使其朝向圆心外侧（便于阅读）
+                // 如果角度在下半圆(90-270度)，需要额外旋转180度让文字正过来
+                let rotation = midAngle;
+                if (midAngle > 90 && midAngle < 270) {
+                    rotation = midAngle + 180;
+                }
+                text.setAttribute("transform", `rotate(${rotation}, ${x}, ${y})`);
                 
-                item.appendChild(span);
-                wheel.appendChild(item);
+                text.textContent = `${food.emoji} ${food.name}`;
+                svg.appendChild(text);
             });
         }
 
